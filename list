@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>r's Financial Dashboard — 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --accent-green: #00ff9d;
+            --accent-red: #ff4757;
+            --accent-blue: #5c7cfa;
+            --accent-purple: #a855f7;
+            --accent-orange: #ff9f43;
+            --accent-cyan: #22d3ee;
+            --accent-pink: #f472b6;
+            --accent-yellow: #fbbf24;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b9e;
+            --text-muted: #4a4a5c;
+            --border-subtle: rgba(255,255,255,0.06);
+            --glow-green: rgba(0, 255, 157, 0.15);
+            --glow-red: rgba(255, 71, 87, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Mono', monospace; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); opacity: 0.03; pointer-events: none; z-index: 1000; }
+        .bg-orbs { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+        .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: float 20s ease-in-out infinite; }
+        .orb-1 { width: 400px; height: 400px; background: radial-gradient(circle, var(--accent-green) 0%, transparent 70%); top: -100px; right: 10%; }
+        .orb-2 { width: 300px; height: 300px; background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%); bottom: 10%; left: -50px; animation-delay: -5s; }
+        .orb-3 { width: 250px; height: 250px; background: radial-gradient(circle, var(--accent-blue) 0%, transparent 70%); top: 50%; right: -50px; animation-delay: -10s; }
+        @keyframes float { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(30px, -30px) scale(1.05); } 50% { transform: translate(-20px, 20px) scale(0.95); } 75% { transform: translate(20px, 30px) scale(1.02); } }
+        .container { max-width: 1400px; margin: 0 auto; padding: 40px 24px; }
+        header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border-subtle); }
+        .logo-section h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.5rem; letter-spacing: -0.03em; background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-green) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+        .logo-section .subtitle { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase; }
+        .month-tabs { display: flex; gap: 8px; }
+        .month-tab { background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 12px 24px; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 1rem; color: var(--text-secondary); cursor: pointer; transition: all 0.2s ease; }
+        .month-tab:hover { border-color: var(--accent-green); color: var(--text-primary); }
+        .month-tab.active { background: var(--accent-green); border-color: var(--accent-green); color: var(--bg-primary); }
+        .month-tab .year { font-size: 0.65rem; opacity: 0.7; margin-left: 4px; }
+        .month-content { display: none; }
+        .month-content.active { display: block; }
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 48px; }
+        .summary-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 28px; position: relative; overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .summary-card:hover { transform: translateY(-4px); }
+        .summary-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .summary-card.income::before { background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan)); }
+        .summary-card.income:hover { box-shadow: 0 20px 60px var(--glow-green); }
+        .summary-card.spending::before { background: linear-gradient(90deg, var(--accent-red), var(--accent-orange)); }
+        .summary-card.spending:hover { box-shadow: 0 20px 60px var(--glow-red); }
+        .summary-card.net::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+        .summary-card.net:hover { box-shadow: 0 20px 60px rgba(92, 124, 250, 0.15); }
+        .summary-card .label { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 10px; }
+        .summary-card .amount { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 2.2rem; letter-spacing: -0.02em; }
+        .summary-card.income .amount { color: var(--accent-green); }
+        .summary-card.spending .amount { color: var(--accent-red); }
+        .summary-card.net .amount { color: var(--accent-blue); }
+        .summary-card .icon { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); font-size: 3.5rem; opacity: 0.1; }
+        .section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.3rem; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+        .section-title::before { content: ''; width: 4px; height: 20px; background: var(--accent-green); border-radius: 2px; }
+        .categories-section { margin-bottom: 48px; }
+        .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .category-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.3s ease; position: relative; }
+        .category-card:hover { border-color: var(--accent-green); }
+        .category-card.expanded { border-color: var(--accent-green); background: rgba(0, 255, 157, 0.03); }
+        .category-main { padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .category-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .category-name { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px; }
+        .category-amount { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem; }
+        .category-bar { height: 3px; background: var(--bg-secondary); overflow: hidden; }
+        .category-bar-fill { height: 100%; transition: width 0.6s ease; }
+        .category-expand-icon { font-size: 0.8rem; color: var(--text-muted); transition: transform 0.3s ease; }
+        .category-card.expanded .category-expand-icon { transform: rotate(180deg); }
+        .category-dropdown { max-height: 0; overflow: hidden; background: var(--bg-secondary); transition: max-height 0.3s ease; }
+        .category-card.expanded .category-dropdown { max-height: 500px; }
+        .dropdown-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--border-subtle); font-size: 0.8rem; }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item-name { color: var(--text-secondary); }
+        .dropdown-item-amount { font-family: 'Syne', sans-serif; font-weight: 600; color: var(--accent-red); }
+        .category-card[data-category="utilities"] .category-icon { background: rgba(92, 124, 250, 0.15); }
+        .category-card[data-category="utilities"] .category-bar-fill { background: var(--accent-blue); }
+        .category-card[data-category="groceries"] .category-icon { background: rgba(0, 255, 157, 0.15); }
+        .category-card[data-category="groceries"] .category-bar-fill { background: var(--accent-green); }
+        .category-card[data-category="subscriptions"] .category-icon { background: rgba(168, 85, 247, 0.15); }
+        .category-card[data-category="subscriptions"] .category-bar-fill { background: var(--accent-purple); }
+        .category-card[data-category="food"] .category-icon { background: rgba(255, 159, 67, 0.15); }
+        .category-card[data-category="food"] .category-bar-fill { background: var(--accent-orange); }
+        .category-card[data-category="car"] .category-icon { background: rgba(255, 71, 87, 0.15); }
+        .category-card[data-category="car"] .category-bar-fill { background: var(--accent-red); }
+        .category-card[data-category="personal"] .category-icon { background: rgba(34, 211, 238, 0.15); }
+        .category-card[data-category="personal"] .category-bar-fill { background: var(--accent-cyan); }
+        .category-card[data-category="annual"] .category-icon { background: rgba(251, 191, 36, 0.15); }
+        .category-card[data-category="annual"] .category-bar-fill { background: var(--accent-yellow); }
+        .category-card[data-category="entertainment"] .category-icon { background: rgba(244, 114, 182, 0.15); }
+        .category-card[data-category="entertainment"] .category-bar-fill { background: var(--accent-pink); }
+        .category-card[data-category="health"] .category-icon { background: rgba(239, 68, 68, 0.15); }
+        .category-card[data-category="health"] .category-bar-fill { background: #ef4444; }
+        .category-card[data-category="shopping"] .category-icon { background: rgba(236, 72, 153, 0.15); }
+        .category-card[data-category="shopping"] .category-bar-fill { background: #ec4899; }
+        .ai-highlight::after { content: 'AI'; position: absolute; top: -6px; right: -6px; background: var(--accent-purple); color: white; font-size: 0.55rem; padding: 2px 5px; border-radius: 4px; font-weight: 700; z-index: 10; }
+        .main-grid { display: grid; grid-template-columns: 1fr 400px; gap: 32px; }
+        .transactions-list { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; overflow: hidden; }
+        .transactions-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); }
+        .transactions-header h3 { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 1rem; }
+        .filter-tabs { display: flex; gap: 6px; }
+        .filter-tab { background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; font-family: 'Space Mono', monospace; font-size: 0.7rem; cursor: pointer; transition: all 0.2s ease; }
+        .filter-tab:hover { border-color: var(--accent-green); color: var(--text-primary); }
+        .filter-tab.active { background: var(--accent-green); border-color: var(--accent-green); color: var(--bg-primary); }
+        .transactions-body { max-height: 500px; overflow-y: auto; }
+        .transactions-body::-webkit-scrollbar { width: 6px; }
+        .transactions-body::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        .transactions-body::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+        .transaction-date-header { padding: 10px 24px; background: var(--bg-secondary); font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; position: sticky; top: 0; z-index: 10; }
+        .transaction-item { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border-subtle); transition: background 0.2s ease; }
+        .transaction-item:hover { background: rgba(255, 255, 255, 0.02); }
+        .transaction-info { display: flex; flex-direction: column; gap: 2px; }
+        .transaction-name { font-size: 0.85rem; color: var(--text-primary); }
+        .transaction-category { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+        .transaction-amount { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.95rem; text-align: right; }
+        .transaction-amount.positive { color: var(--accent-green); }
+        .transaction-amount.negative { color: var(--accent-red); }
+        .sidebar { display: flex; flex-direction: column; gap: 24px; }
+        .panel { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 20px; }
+        .panel h3 { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 1rem; margin-bottom: 16px; }
+        .donut-chart { position: relative; width: 200px; height: 200px; margin: 0 auto 24px; }
+        .donut-chart svg { transform: rotate(-90deg); cursor: pointer; }
+        .donut-chart svg circle { transition: opacity 0.2s ease, stroke-width 0.2s ease; }
+        .donut-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+        .donut-center .total-label { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; }
+        .donut-center .total-amount { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem; }
+        .chart-legend { display: flex; flex-direction: column; gap: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+        .legend-item:hover { background: rgba(255, 255, 255, 0.03); }
+        .legend-color { width: 10px; height: 10px; border-radius: 3px; }
+        .legend-name { flex: 1; font-size: 0.75rem; color: var(--text-secondary); }
+        .legend-value { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.8rem; }
+        .legend-percent { font-size: 0.65rem; color: var(--text-muted); min-width: 36px; text-align: right; }
+        .income-panel h3 { color: var(--accent-green); }
+        .breakdown-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+        .breakdown-item:last-child { border-bottom: none; }
+        .breakdown-label { font-size: 0.8rem; color: var(--text-secondary); }
+        .breakdown-value { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.85rem; }
+        .breakdown-value.expense { color: var(--accent-red); }
+        .breakdown-value.income { color: var(--accent-green); }
+        @media (max-width: 1200px) { .category-grid { grid-template-columns: repeat(2, 1fr); } .main-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .summary-grid { grid-template-columns: 1fr; } .category-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 20px; } .logo-section h1 { font-size: 1.8rem; } }
+        .empty-state { text-align: center; padding: 60px 24px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <h1>Financial Dashboard</h1>
+                <div class="subtitle">Personal Finance Tracker — Event Strategy Group</div>
+            </div>
+            <div class="month-tabs">
+                <button class="month-tab active" data-month="january">January<span class="year">'26</span></button>
+                <button class="month-tab" data-month="february">February<span class="year">'26</span></button>
+            </div>
+        </header>
+
+        <div class="month-content active" id="january">
+            <div class="summary-grid">
+                <div class="summary-card income"><div class="label">Total Income</div><div class="amount">$8,604.08</div><div class="icon">↑</div></div>
+                <div class="summary-card spending"><div class="label">Total Spending</div><div class="amount">$6,686.61</div><div class="icon">↓</div></div>
+                <div class="summary-card net"><div class="label">Net Balance</div><div class="amount">$1,917.47</div><div class="icon">≈</div></div>
+            </div>
+            <section class="categories-section">
+                <h2 class="section-title">Spending by Category</h2>
+                <div class="category-grid" id="jan-categories"></div>
+            </section>
+            <div class="main-grid">
+                <div class="transactions-list">
+                    <div class="transactions-header">
+                        <h3>All Transactions</h3>
+                        <div class="filter-tabs">
+                            <button class="filter-tab active" data-filter="all" data-month="jan">All</button>
+                            <button class="filter-tab" data-filter="income" data-month="jan">Income</button>
+                            <button class="filter-tab" data-filter="expense" data-month="jan">Expenses</button>
+                        </div>
+                    </div>
+                    <div class="transactions-body" id="jan-transactions"></div>
+                </div>
+                <div class="sidebar">
+                    <div class="panel">
+                        <h3>Spending Breakdown</h3>
+                        <div class="donut-chart">
+                            <svg width="200" height="200" viewBox="0 0 200 200" id="jan-donut">
+                                <circle cx="100" cy="100" r="70" fill="none" stroke="var(--bg-secondary)" stroke-width="20"/>
+                            </svg>
+                            <div class="donut-center">
+                                <div class="total-label">Total Spent</div>
+                                <div class="total-amount" style="color: var(--accent-red);">$6,687</div>
+                            </div>
+                        </div>
+                        <div class="chart-legend" id="jan-legend"></div>
+                    </div>
+                    <div class="panel income-panel">
+                        <h3>💰 Income Sources</h3>
+                        <div class="breakdown-item"><span class="breakdown-label">ADP Payroll (×2)</span><span class="breakdown-value income">$6,349.92</span></div>
+                        <div class="breakdown-item"><span class="breakdown-label">Payment Received</span><span class="breakdown-value income">$1,875.54</span></div>
+                        <div class="breakdown-item"><span class="breakdown-label">Event Strategy</span><span class="breakdown-value income">$313.62</span></div>
+                        <div class="breakdown-item"><span class="breakdown-label">Venmo Cashout</span><span class="breakdown-value income">$65.00</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="month-content" id="february">
+            <div class="summary-grid">
+                <div class="summary-card income"><div class="label">Total Income</div><div class="amount">$8,274.92</div><div class="icon">↑</div></div>
+                <div class="summary-card spending"><div class="label">Total Spending</div><div class="amount">$1,789.05</div><div class="icon">↓</div></div>
+                <div class="summary-card net"><div class="label">Net Balance</div><div class="amount">$6,485.87</div><div class="icon">≈</div></div>
+            </div>
+            <section class="categories-section">
+                <h2 class="section-title">Spending by Category</h2>
+                <div class="category-grid" id="feb-categories"></div>
+            </section>
+            <div class="main-grid">
+                <div class="transactions-list">
+                    <div class="transactions-header">
+                        <h3>All Transactions</h3>
+                        <div class="filter-tabs">
+                            <button class="filter-tab active" data-filter="all" data-month="feb">All</button>
+                            <button class="filter-tab" data-filter="income" data-month="feb">Income</button>
+                            <button class="filter-tab" data-filter="expense" data-month="feb">Expenses</button>
+                        </div>
+                    </div>
+                    <div class="transactions-body" id="feb-transactions"></div>
+                </div>
+                <div class="sidebar">
+                    <div class="panel">
+                        <h3>Spending Breakdown</h3>
+                        <div class="donut-chart">
+                            <svg width="200" height="200" viewBox="0 0 200 200" id="feb-donut">
+                                <circle cx="100" cy="100" r="70" fill="none" stroke="var(--bg-secondary)" stroke-width="20"/>
+                            </svg>
+                            <div class="donut-center">
+                                <div class="total-label">Total Spent</div>
+                                <div class="total-amount" style="color: var(--accent-red);">$1,789</div>
+                            </div>
+                        </div>
+                        <div class="chart-legend" id="feb-legend"></div>
+                    </div>
+                    <div class="panel income-panel">
+                        <h3>💰 Income Sources</h3>
+                        <div class="breakdown-item"><span class="breakdown-label">ADP Payroll (×2)</span><span class="breakdown-value income">$6,349.92</span></div>
+                        <div class="breakdown-item"><span class="breakdown-label">ATM Deposit</span><span class="breakdown-value income">$1,400.00</span></div>
+                        <div class="breakdown-item"><span class="breakdown-label">APY Savings Interest</span><span class="breakdown-value income">$525.00</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var categoryColors = {
+            'Car & Insurance': { color: 'var(--accent-red)', icon: '🚗', key: 'car' },
+            'Groceries': { color: 'var(--accent-green)', icon: '🛒', key: 'groceries' },
+            'Utilities': { color: 'var(--accent-blue)', icon: '⚡', key: 'utilities' },
+            'Subscriptions': { color: 'var(--accent-purple)', icon: '🔄', key: 'subscriptions' },
+            'Entertainment': { color: 'var(--accent-pink)', icon: '🎵', key: 'entertainment' },
+            'Personal': { color: 'var(--accent-cyan)', icon: '👤', key: 'personal' },
+            'Food & Drink': { color: 'var(--accent-orange)', icon: '🍔', key: 'food' },
+            'Annual / One-Time': { color: 'var(--accent-yellow)', icon: '📅', key: 'annual' },
+            'Fees': { color: 'var(--text-muted)', icon: '💳', key: 'fees' },
+            'Health': { color: '#ef4444', icon: '💊', key: 'health' },
+            'Shopping': { color: '#ec4899', icon: '🛍️', key: 'shopping' }
+        };
+
+        var januaryCategoryData = {
+            'Car & Insurance': { total: 957.23, items: [
+                { name: 'Garnet Ford (Car Service)', amount: 757.49 },
+                { name: 'State Farm Insurance', amount: 85.02 },
+                { name: 'PA DMV', amount: 53.00 },
+                { name: 'Uber', amount: 13.98 },
+                { name: 'Parking', amount: 1.75 }
+            ]},
+            'Groceries': { total: 721.48, items: [
+                { name: 'Fresh Market', amount: 201.95 },
+                { name: 'Wegmans', amount: 152.06 },
+                { name: 'Giant', amount: 114.35 },
+                { name: 'Dutch Family Fresh', amount: 84.05 },
+                { name: 'Gadaletos Seafood', amount: 43.22 },
+                { name: 'Whole Foods', amount: 41.75 },
+                { name: 'Stoltzfus Cheese', amount: 28.63 },
+                { name: 'Fishers Salads', amount: 26.94 },
+                { name: 'Beilers Bakery', amount: 9.83 },
+                { name: 'Kings Garden', amount: 7.24 },
+                { name: 'Hudson St', amount: 5.99 }
+            ]},
+            'Utilities': { total: 530.37, items: [
+                { name: 'PECO (Gas)', amount: 363.63 },
+                { name: 'Nationwide (Energy)', amount: 116.16 },
+                { name: 'Xfinity (WiFi)', amount: 50.58 }
+            ]},
+            'Subscriptions': { total: 415.92, items: [
+                { name: 'Midjourney (AI)', amount: 127.20 },
+                { name: 'Social Boost', amount: 70.00 },
+                { name: 'Paddle', amount: 51.94 },
+                { name: 'ChatGPT (AI)', amount: 42.20 },
+                { name: 'Squarespace', amount: 26.50 },
+                { name: 'Dropbox', amount: 24.71 },
+                { name: 'Spotify', amount: 24.71 },
+                { name: 'Claude (AI)', amount: 21.20 },
+                { name: 'X Premium / Twitter', amount: 17.47 },
+                { name: 'Patreon', amount: 9.99 }
+            ]},
+            'Entertainment': { total: 395.90, items: [
+                { name: "Pitbull - I'm Back Tour", amount: 395.90 }
+            ]},
+            'Personal': { total: 335.93, items: [
+                { name: 'Road Runner Sports', amount: 280.93 },
+                { name: 'Haircut', amount: 55.00 }
+            ]},
+            'Food & Drink': { total: 175.74, items: [
+                { name: 'Live Philly Bar', amount: 77.88 },
+                { name: 'Penrose Diner', amount: 46.76 },
+                { name: 'Wawa', amount: 30.52 },
+                { name: 'Duffers Tavern', amount: 12.30 },
+                { name: 'Coffee Shop', amount: 8.28 }
+            ]},
+            'Annual / One-Time': { total: 113.42, items: [
+                { name: 'H&R Block Tax Prep', amount: 113.42 }
+            ]},
+            'Fees': { total: 20.00, items: [
+                { name: 'Cash Advance Fees', amount: 20.00 }
+            ]}
+        };
+
+        var februaryCategoryData = {
+            'Annual / One-Time': { total: 1288.00, items: [
+                { name: 'IRS Tax Payment', amount: 1258.00 },
+                { name: 'Costco Membership', amount: 30.00 }
+            ]},
+            'Subscriptions': { total: 172.34, items: [
+                { name: 'Sculpd', amount: 83.74 },
+                { name: 'Planet Fitness', amount: 39.00 },
+                { name: 'Remove.bg (Paddle)', amount: 39.00 },
+                { name: 'Envato', amount: 10.60 }
+            ]},
+            'Groceries': { total: 131.51, items: [
+                { name: 'Giant', amount: 58.16 },
+                { name: 'Wegmans', amount: 35.01 },
+                { name: 'Fishers Salads', amount: 12.20 },
+                { name: 'Stoltzfus Cheese', amount: 11.98 },
+                { name: 'Dutch Family Fresh', amount: 9.45 },
+                { name: 'Kings Garden', amount: 3.71 }
+            ]},
+            'Utilities': { total: 107.92, items: [{ name: 'PECO (Gas)', amount: 107.92 }]},
+            'Health': { total: 44.78, items: [{ name: 'CVS Pharmacy', amount: 44.78 }]},
+            'Shopping': { total: 44.50, items: [{ name: 'Barnes & Noble', amount: 44.50 }]}
+        };
+
+        var januaryTransactions = [
+            { date: "January 31, 2026", name: "Whole Foods", amount: -12.30, category: "Groceries" },
+            { date: "January 31, 2026", name: "Pitbull - I'm Back Tour", amount: -395.90, category: "Entertainment" },
+            { date: "January 31, 2026", name: "State Farm Insurance", amount: -85.02, category: "Car & Insurance" },
+            { date: "January 31, 2026", name: "Nationwide Energy", amount: -61.72, category: "Utilities" },
+            { date: "January 30, 2026", name: "Stoltzfus Cheese", amount: -8.50, category: "Groceries" },
+            { date: "January 30, 2026", name: "Dutch Family Fresh", amount: -21.65, category: "Groceries" },
+            { date: "January 29, 2026", name: "Gadaletos Seafood", amount: -21.29, category: "Groceries" },
+            { date: "January 29, 2026", name: "Kings Garden", amount: -3.62, category: "Groceries" },
+            { date: "January 29, 2026", name: "Fishers Salads", amount: -15.46, category: "Groceries" },
+            { date: "January 28, 2026", name: "H&R Block Tax Prep", amount: -113.42, category: "Annual / One-Time" },
+            { date: "January 28, 2026", name: "Giant", amount: -65.47, category: "Groceries" },
+            { date: "January 20, 2026", name: "Fresh Market", amount: -50.50, category: "Groceries" },
+            { date: "January 20, 2026", name: "Wegmans", amount: -54.38, category: "Groceries" },
+            { date: "January 15, 2026", name: "ADP Payroll", amount: 3174.96, category: "Income" },
+            { date: "January 15, 2026", name: "Event Strategy Payment", amount: 313.62, category: "Income" },
+            { date: "January 15, 2026", name: "Venmo Cashout", amount: 65.00, category: "Income" },
+            { date: "January 15, 2026", name: "Payment Received", amount: 1365.33, category: "Income" },
+            { date: "January 15, 2026", name: "Payment Received", amount: 510.21, category: "Income" },
+            { date: "January 12, 2026", name: "Garnet Ford (Car Service)", amount: -757.49, category: "Car & Insurance" },
+            { date: "January 12, 2026", name: "PA DMV", amount: -53.00, category: "Car & Insurance" },
+            { date: "January 10, 2026", name: "PECO (Gas)", amount: -363.63, category: "Utilities" },
+            { date: "January 10, 2026", name: "Xfinity (WiFi)", amount: -50.58, category: "Utilities" },
+            { date: "January 4, 2026", name: "Live Philly Bar", amount: -77.88, category: "Food & Drink" },
+            { date: "January 3, 2026", name: "Penrose Diner", amount: -46.76, category: "Food & Drink" },
+            { date: "January 3, 2026", name: "Wawa", amount: -30.52, category: "Food & Drink" },
+            { date: "January 2, 2026", name: "Midjourney (AI)", amount: -127.20, category: "Subscriptions" },
+            { date: "January 2, 2026", name: "Social Boost", amount: -70.00, category: "Subscriptions" },
+            { date: "January 2, 2026", name: "ChatGPT (AI)", amount: -42.20, category: "Subscriptions" },
+            { date: "January 2, 2026", name: "Claude (AI)", amount: -21.20, category: "Subscriptions" },
+            { date: "January 2, 2026", name: "Spotify", amount: -24.71, category: "Subscriptions" },
+            { date: "January 1, 2026", name: "Road Runner Sports", amount: -280.93, category: "Personal" },
+            { date: "January 1, 2026", name: "Haircut", amount: -55.00, category: "Personal" },
+            { date: "January 1, 2026", name: "ADP Payroll", amount: 3174.96, category: "Income" },
+            { date: "January 1, 2026", name: "Nationwide Energy", amount: -54.44, category: "Utilities" }
+        ];
+
+        var februaryTransactions = [
+            { date: "February 15, 2026", name: "ADP Payroll", amount: 3174.96, category: "Income" },
+            { date: "February 15, 2026", name: "APY Savings Interest", amount: 525.00, category: "Income" },
+            { date: "February 7, 2026", name: "ATM Deposit", amount: 1400.00, category: "Income" },
+            { date: "February 7, 2026", name: "Costco Membership", amount: -30.00, category: "Annual / One-Time" },
+            { date: "February 7, 2026", name: "IRS Tax Payment", amount: -1258.00, category: "Annual / One-Time" },
+            { date: "February 7, 2026", name: "Planet Fitness", amount: -39.00, category: "Subscriptions" },
+            { date: "February 6, 2026", name: "Sculpd", amount: -83.74, category: "Subscriptions" },
+            { date: "February 6, 2026", name: "PECO (Gas)", amount: -107.92, category: "Utilities" },
+            { date: "February 6, 2026", name: "Remove.bg (Paddle)", amount: -39.00, category: "Subscriptions" },
+            { date: "February 6, 2026", name: "Giant", amount: -12.39, category: "Groceries" },
+            { date: "February 6, 2026", name: "Dutch Family Fresh", amount: -9.45, category: "Groceries" },
+            { date: "February 6, 2026", name: "Stoltzfus Cheese", amount: -11.98, category: "Groceries" },
+            { date: "February 6, 2026", name: "Fishers Salads", amount: -12.20, category: "Groceries" },
+            { date: "February 6, 2026", name: "Kings Garden", amount: -3.71, category: "Groceries" },
+            { date: "February 6, 2026", name: "Envato", amount: -10.60, category: "Subscriptions" },
+            { date: "February 1, 2026", name: "ADP Payroll", amount: 3174.96, category: "Income" },
+            { date: "February 1, 2026", name: "CVS Pharmacy", amount: -44.78, category: "Health" },
+            { date: "February 1, 2026", name: "Giant", amount: -45.77, category: "Groceries" },
+            { date: "February 1, 2026", name: "Barnes & Noble", amount: -44.50, category: "Shopping" },
+            { date: "February 1, 2026", name: "Wegmans", amount: -35.01, category: "Groceries" }
+        ];
+
+        function renderCategories(containerId, categoryData, maxTotal) {
+            var container = document.getElementById(containerId);
+            var sortedCategories = Object.entries(categoryData).sort(function(a, b) { return b[1].total - a[1].total; });
+            var html = '';
+            
+            sortedCategories.forEach(function(entry) {
+                var name = entry[0];
+                var data = entry[1];
+                var catInfo = categoryColors[name] || { color: 'var(--text-muted)', icon: '📁', key: 'other' };
+                var percentage = (data.total / maxTotal) * 100;
+                var isAI = name === 'Subscriptions';
+                
+                var itemsHtml = '';
+                data.items.forEach(function(item) {
+                    itemsHtml += '<div class="dropdown-item"><span class="dropdown-item-name">' + item.name + '</span><span class="dropdown-item-amount">$' + item.amount.toFixed(2) + '</span></div>';
+                });
+                
+                html += '<div class="category-card ' + (isAI ? 'ai-highlight' : '') + '" data-category="' + catInfo.key + '">' +
+                    '<div class="category-main" onclick="toggleCategory(this)">' +
+                        '<div><div class="category-name">' + name + '</div><div class="category-amount">$' + data.total.toFixed(2) + '</div></div>' +
+                        '<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;"><div class="category-icon">' + catInfo.icon + '</div><div class="category-expand-icon">▼</div></div>' +
+                    '</div>' +
+                    '<div class="category-bar"><div class="category-bar-fill" style="width: ' + percentage + '%;"></div></div>' +
+                    '<div class="category-dropdown">' + itemsHtml + '</div>' +
+                '</div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function toggleCategory(element) {
+            var card = element.closest('.category-card');
+            card.classList.toggle('expanded');
+        }
+
+        function renderTransactions(containerId, transactions, filter) {
+            var container = document.getElementById(containerId);
+            var filtered = transactions;
+            
+            if (filter === 'income') filtered = transactions.filter(function(t) { return t.amount > 0; });
+            else if (filter === 'expense') filtered = transactions.filter(function(t) { return t.amount < 0; });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No transactions match this filter.</p></div>';
+                return;
+            }
+
+            var grouped = {};
+            filtered.forEach(function(t) {
+                if (!grouped[t.date]) grouped[t.date] = [];
+                grouped[t.date].push(t);
+            });
+
+            var html = '';
+            Object.keys(grouped).forEach(function(date) {
+                html += '<div class="transaction-date-header">' + date + '</div>';
+                grouped[date].forEach(function(t) {
+                    var amountClass = t.amount >= 0 ? 'positive' : 'negative';
+                    var amountStr = (t.amount >= 0 ? '+' : '') + '$' + Math.abs(t.amount).toFixed(2);
+                    html += '<div class="transaction-item"><div class="transaction-info"><div class="transaction-name">' + t.name + '</div><div class="transaction-category">' + t.category + '</div></div><div class="transaction-amount ' + amountClass + '">' + amountStr + '</div></div>';
+                });
+            });
+            container.innerHTML = html;
+        }
+
+        function renderDonut(svgId, legendId, categoryData) {
+            var svg = document.getElementById(svgId);
+            var legend = document.getElementById(legendId);
+            var centerLabel = svg.parentElement.querySelector('.total-label');
+            var centerAmount = svg.parentElement.querySelector('.total-amount');
+            
+            var circles = svg.querySelectorAll('circle:not(:first-child)');
+            circles.forEach(function(c) { c.remove(); });
+            
+            var sortedData = Object.entries(categoryData).map(function(entry) {
+                return { name: entry[0], value: entry[1].total };
+            }).sort(function(a, b) { return b.value - a.value; });
+            
+            var total = sortedData.reduce(function(sum, d) { return sum + d.value; }, 0);
+            var circumference = 2 * Math.PI * 70;
+            var offset = 0;
+
+            sortedData.forEach(function(d, i) {
+                var catInfo = categoryColors[d.name] || { color: 'var(--text-muted)' };
+                var percent = d.value / total;
+                var length = circumference * percent;
+                
+                var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', '100');
+                circle.setAttribute('cy', '100');
+                circle.setAttribute('r', '70');
+                circle.setAttribute('fill', 'none');
+                circle.setAttribute('stroke', catInfo.color);
+                circle.setAttribute('stroke-width', '20');
+                circle.setAttribute('stroke-dasharray', length + ' ' + circumference);
+                circle.setAttribute('stroke-dashoffset', -offset);
+                circle.style.cursor = 'pointer';
+                
+                (function(catName, catValue, catColor) {
+                    circle.addEventListener('mouseenter', function() {
+                        var allCircles = svg.querySelectorAll('circle:not(:first-child)');
+                        allCircles.forEach(function(c) { if (c !== circle) c.style.opacity = '0.3'; });
+                        circle.setAttribute('stroke-width', '24');
+                        centerLabel.textContent = catName;
+                        centerAmount.textContent = '$' + catValue.toFixed(0);
+                        centerAmount.style.color = catColor;
+                    });
+                    circle.addEventListener('mouseleave', function() {
+                        var allCircles = svg.querySelectorAll('circle:not(:first-child)');
+                        allCircles.forEach(function(c) { c.style.opacity = '1'; });
+                        circle.setAttribute('stroke-width', '20');
+                        centerLabel.textContent = 'Total Spent';
+                        centerAmount.textContent = '$' + total.toFixed(0);
+                        centerAmount.style.color = 'var(--accent-red)';
+                    });
+                })(d.name, d.value, catInfo.color);
+                
+                svg.appendChild(circle);
+                offset += length;
+            });
+
+            var legendHtml = '';
+            sortedData.forEach(function(d) {
+                var catInfo = categoryColors[d.name] || { color: 'var(--text-muted)' };
+                var percent = ((d.value / total) * 100).toFixed(1);
+                legendHtml += '<div class="legend-item"><div class="legend-color" style="background: ' + catInfo.color + ';"></div><div class="legend-name">' + d.name + '</div><div class="legend-value">$' + d.value.toFixed(0) + '</div><div class="legend-percent">' + percent + '%</div></div>';
+            });
+            legend.innerHTML = legendHtml;
+        }
+
+        document.querySelectorAll('.month-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.month-tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.month-content').forEach(function(c) { c.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.month).classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.filter-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                var month = tab.dataset.month;
+                document.querySelectorAll('.filter-tab[data-month="' + month + '"]').forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                if (month === 'jan') renderTransactions('jan-transactions', januaryTransactions, tab.dataset.filter);
+                else renderTransactions('feb-transactions', februaryTransactions, tab.dataset.filter);
+            });
+        });
+
+        // Initialize
+        var janMaxTotal = Math.max.apply(null, Object.values(januaryCategoryData).map(function(d) { return d.total; }));
+        renderCategories('jan-categories', januaryCategoryData, janMaxTotal);
+        renderTransactions('jan-transactions', januaryTransactions, 'all');
+        renderDonut('jan-donut', 'jan-legend', januaryCategoryData);
+
+        var febMaxTotal = Math.max.apply(null, Object.values(februaryCategoryData).map(function(d) { return d.total; }));
+        renderCategories('feb-categories', februaryCategoryData, febMaxTotal);
+        renderTransactions('feb-transactions', februaryTransactions, 'all');
+        renderDonut('feb-donut', 'feb-legend', februaryCategoryData);
+    </script>
+</body>
+</html>
